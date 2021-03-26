@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, Container, ListGroup } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Trash } from "react-bootstrap-icons";
+import AddItem from "./AddItem";
 
 function App() {
   const [board, setBoard] = useState([
@@ -30,15 +31,30 @@ function App() {
 
     const { destination, source } = result;
 
-    const sourceColumn = board.find(
+    const newBoard = [...board];
+
+    const sourceColumn = newBoard.find(
       (column) => column.id === source.droppableId
     );
-    const destinationColumn = board.find(
+    const destinationColumn = newBoard.find(
       (column) => column.id === destination.droppableId
     );
-    
+
     const [removedItem] = sourceColumn.tasks.splice(source.index, 1);
     destinationColumn.tasks.splice(destination.index, 0, removedItem);
+
+    setBoard(newBoard);
+  }
+
+  function addColumn(name) {
+    setBoard([
+      ...board,
+      {
+        id: name,
+        title: name,
+        tasks: [],
+      },
+    ]);
   }
 
   return (
@@ -47,22 +63,21 @@ function App() {
         <h1 className="text-center">Kanban Board</h1>
       </header>
 
-      <Container fluid className="d-flex">
+      <Container fluid className="d-flex flex-wrap">
         <DragDropContext onDragEnd={onDragEnd}>
           {board.map((column, columnIndex) => (
             <Card className="card" key={column.id}>
               <Card.Body>
                 <Card.Title className="d-flex justify-content-between">
-                  <span>{column.title} (1)</span>{" "}
+                  <span>
+                    {column.title} ({column.tasks.length})
+                  </span>
                   <Trash className="icon-delete" />
                 </Card.Title>
 
                 <Droppable droppableId={column.id}>
                   {(provided) => (
-                    <ListGroup
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                    >
+                    <ListGroup ref={provided.innerRef}>
                       {column.tasks.map((task, taskIndex) => (
                         <Draggable
                           key={task.id}
@@ -88,6 +103,8 @@ function App() {
               </Card.Body>
             </Card>
           ))}
+
+          <AddItem placeholder="Add new column" handleAddItem={addColumn} />
         </DragDropContext>
       </Container>
     </>
