@@ -1,43 +1,73 @@
-import { Card, Col, Container, ListGroup, Row } from "react-bootstrap";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useState } from "react";
+import { Card, Container, ListGroup } from "react-bootstrap";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { Trash } from "react-bootstrap-icons";
 
 function App() {
-  const [jobs, setJobs] = useState(["abc", "def", "GHI"]);
+  const [board, setBoard] = useState([
+    {
+      id: "todo",
+      title: "Todo",
+      tasks: [
+        { id: "1", content: "todo1" },
+        { id: "2", content: "todo2" },
+      ],
+    },
+    {
+      id: "doing",
+      title: "Doing",
+      tasks: [{ id: "3", content: "doing1" }],
+    },
+    {
+      id: "done",
+      title: "Done",
+      tasks: [],
+    },
+  ]);
 
   function onDragEnd(result) {
-    console.log(result);
-    if (result.destination) {
-      const items = [...jobs];
-      const [reorderedItem] = items.splice(result.source.index, 1);
-      items.splice(result.destination.index, 0, reorderedItem);
+    if (!result.destination) return;
 
-      setJobs(items);
-    }
+    const { destination, source } = result;
+
+    const sourceColumn = board.find(
+      (column) => column.id === source.droppableId
+    );
+    const destinationColumn = board.find(
+      (column) => column.id === destination.droppableId
+    );
+    
+    const [removedItem] = sourceColumn.tasks.splice(source.index, 1);
+    destinationColumn.tasks.splice(destination.index, 0, removedItem);
   }
 
   return (
-    <Container>
-      <h1>Kanban Board</h1>
+    <>
+      <header className="d-flex justify-content-center p-3">
+        <h1 className="text-center">Kanban Board</h1>
+      </header>
 
-      <Row>
-        <Col>
-          <Card style={{ width: "18rem" }}>
-            <Card.Body>
-              <Card.Title>TODO (1)</Card.Title>
+      <Container fluid className="d-flex">
+        <DragDropContext onDragEnd={onDragEnd}>
+          {board.map((column, columnIndex) => (
+            <Card className="card" key={column.id}>
+              <Card.Body>
+                <Card.Title className="d-flex justify-content-between">
+                  <span>{column.title} (1)</span>{" "}
+                  <Trash className="icon-delete" />
+                </Card.Title>
 
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="todo">
+                <Droppable droppableId={column.id}>
                   {(provided) => (
                     <ListGroup
                       {...provided.droppableProps}
                       ref={provided.innerRef}
                     >
-                      {jobs.map((job, index) => (
+                      {column.tasks.map((task, taskIndex) => (
                         <Draggable
-                          key={index}
-                          draggableId={index + ""}
-                          index={index}
+                          key={task.id}
+                          draggableId={task.id}
+                          index={taskIndex}
                         >
                           {(provided) => (
                             <ListGroup.Item
@@ -45,7 +75,7 @@ function App() {
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                             >
-                              {job}
+                              {task.content}
                             </ListGroup.Item>
                           )}
                         </Draggable>
@@ -55,44 +85,12 @@ function App() {
                     </ListGroup>
                   )}
                 </Droppable>
-              </DragDropContext>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col>
-          <Card style={{ width: "18rem" }}>
-            <Card.Body>
-              <Card.Title>IN PROGRESS (1)</Card.Title>
-
-              <ListGroup>
-                <ListGroup.Item>Cras justo odio</ListGroup.Item>
-                <ListGroup.Item>Dapibus ac facilisis in</ListGroup.Item>
-                <ListGroup.Item>Morbi leo risus</ListGroup.Item>
-                <ListGroup.Item>Porta ac consectetur ac</ListGroup.Item>
-                <ListGroup.Item>Vestibulum at eros</ListGroup.Item>
-              </ListGroup>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col>
-          <Card style={{ width: "18rem" }}>
-            <Card.Body>
-              <Card.Title>TODO (1)</Card.Title>
-
-              <ListGroup>
-                <ListGroup.Item>Cras justo odio</ListGroup.Item>
-                <ListGroup.Item>Dapibus ac facilisis in</ListGroup.Item>
-                <ListGroup.Item>Morbi leo risus</ListGroup.Item>
-                <ListGroup.Item>Porta ac consectetur ac</ListGroup.Item>
-                <ListGroup.Item>Vestibulum at eros</ListGroup.Item>
-              </ListGroup>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+              </Card.Body>
+            </Card>
+          ))}
+        </DragDropContext>
+      </Container>
+    </>
   );
 }
 
