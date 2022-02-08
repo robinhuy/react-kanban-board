@@ -2,31 +2,32 @@ import { useState } from "react";
 import { Card, Container, ListGroup } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Trash } from "react-bootstrap-icons";
+import { nanoid } from 'nanoid'
 import AddItem from "./AddItem";
 
 function App() {
   const [board, setBoard] = useState([
     {
-      id: "todo",
+      id: nanoid(),
       title: "Todo",
       tasks: [
-        { id: "1", content: "todo1" },
-        { id: "2", content: "todo2" },
+        { id: nanoid(), content: "todo1" },
+        { id: nanoid(), content: "todo2" },
       ],
     },
     {
-      id: "doing",
+      id: nanoid(),
       title: "Doing",
-      tasks: [{ id: "3", content: "doing1" }],
+      tasks: [{ id: nanoid(), content: "doing1" }],
     },
     {
-      id: "done",
+      id: nanoid(),
       title: "Done",
       tasks: [],
     },
   ]);
 
-  function onDragEnd(result) {
+  const onDragEnd = (result) => {
     if (!result.destination) return;
 
     const { destination, source } = result;
@@ -46,15 +47,34 @@ function App() {
     setBoard(newBoard);
   }
 
-  function addColumn(name) {
+  const addColumn = (value) => {
     setBoard([
       ...board,
       {
-        id: name,
-        title: name,
+        id: nanoid(),
+        title: value,
         tasks: [],
       },
     ]);
+  }
+
+  const removeColumn = (columnId) => {
+    setBoard(board.filter(column => column.id !== columnId));
+  }
+
+  const addJob = (value, columnId) => {
+    const newBoard = board.map(column => {
+      if (column.id === columnId) {
+        return {
+          ...column,
+          tasks: [...column.tasks, { id: nanoid(), content: value }]
+        }
+      } else {
+        return column;
+      }
+    });
+
+    setBoard(newBoard);
   }
 
   return (
@@ -72,7 +92,8 @@ function App() {
                   <span>
                     {column.title} ({column.tasks.length})
                   </span>
-                  <Trash className="icon-delete" />
+
+                  <Trash className="icon-delete" onClick={() => removeColumn(column.id)} />
                 </Card.Title>
 
                 <Droppable droppableId={column.id}>
@@ -100,6 +121,8 @@ function App() {
                     </ListGroup>
                   )}
                 </Droppable>
+
+                <AddItem placeholder="Add new job" handleAddItem={addJob} columnId={column.id} />
               </Card.Body>
             </Card>
           ))}
